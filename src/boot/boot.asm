@@ -1,8 +1,8 @@
     org 0x7c00
 
 StackBase           equ 0x7c00
-LoaderBase          equ 0x1000
-LoaderOffset        equ 0x00
+LoaderBase          equ 0x9000
+LoaderOffset        equ 0x100
 
     jmp short Laber_Start
     nop
@@ -164,7 +164,7 @@ Search_Ent_Success:
     Load_File:
     push ax
     push bx
-    ;但在读数据区文件扇区这个过程中，每读一个扇区打印一个‘=’号
+    ;但在读数据区文件扇区这个过程中，每读一个扇区打印一个‘.’号
     ;====================== display a char ==============================
     ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ;+                    Call INT 10h, 0eh                             +
@@ -172,7 +172,7 @@ Search_Ent_Success:
     ;+                      bl = attrubute                              +
     ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     mov ah, 0x0e
-    mov al, '='                             ;print '=' while read one sec
+    mov al, '.'                             ;print '=' while read one sec
     mov bl, 0x0f
     int 0x10
     ;调用__readsectors参数：ax = 扇区号，cl = 扇区数，es:bx = 磁盘的扇区读到内存哪里
@@ -285,7 +285,7 @@ Search_Ent_Success:
 
         Even2:
             and ax, 0x0fff                  ;清低4位
-            
+
             pop bx
             pop es
             ret

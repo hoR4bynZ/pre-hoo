@@ -91,6 +91,7 @@ $(tb)/boot.bin: src/boot/boot.asm
 	$(asm) $(asminc) -o $@ $<
 
 # make loader
-#$(tb)/boot.bin: src/boot/include/fat12.inc
+$(tb)/loader.bin: src/boot/include/fat12.inc
+$(tb)/loader.bin: src/boot/include/loader.inc
 $(tb)/loader.bin: src/boot/loader.asm
 	$(asm) $(asminc) -o $@ $<
