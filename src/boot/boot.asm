@@ -58,7 +58,7 @@ Laber_Start:                                ;# +62
     mov ax, ds
     mov es, ax
     pop ax
-    mov bp, BootMessage                     ;str "Start Booting..."
+    mov bp, BootMessage                     ;str "Start Boot"
     int 0x10
 
 ;========================== reset floppy ===============================

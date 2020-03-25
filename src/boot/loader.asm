@@ -127,7 +127,7 @@ Search_Ent_Success:
 	and di, 0xffe0                          	;32位对齐，使di重新指向文件名头字符——目录项结构体头字段
 	push eax
 	mov eax, [es:di + 0x1c]
-	cmp eax, KERNEL_LIMIT
+	cmp eax, KERNEL_LIMIT						;is kernel close to limits, 128Kb?
 	ja Kernel_Error_Limit
 	pop eax
 	jmp Kernel_Load_Start
@@ -168,7 +168,7 @@ Search_Ent_Success:
 	;调用__readsectors参数：ax = 扇区号，cl = 扇区数，es:bx = 磁盘的扇区读到内存哪里
 	pop bx                                  	;Loader加载到内存的物址
 	pop ax                                  	;文件在磁盘的起始扇区号
-	mov cl, 1
+	mov cl, 1									;;;未来内核变大加载扇区数要改？？
 	call __readsectors
 
 	pop ax                                  	;ax = 起始簇号
@@ -245,8 +245,18 @@ Get_Available_Mem:
 	mov	bp,	_getmcrsuccmess
 	int	0x10
 
-	;-------------------- enter protect mode --------------------
-	;--------------------- open address A20 ---------------------
+	;---------------------- set focus ----------------------------
+	; focus is located at line 6 & column 0
+	; 设置在这里是“历史遗留问题”，我loader打印字符的函数和后面kernel
+	; 打印字符函数不一样，这会造成光标会不一致，为了对得上后面kernel的
+	; 光标，所以只能在这里 hard-code 这个光标地址 :-(
+	mov ax, 0x200
+	mov bx, 0
+	mov dx, 0x0600
+	int 0x10
+
+	;-------------------- enter protect mode ---------------------
+	;------------------- 1. open address A20 ---------------------
 	push ax
 	in al, 0x92
 	or al, 0000_0010b
@@ -258,7 +268,7 @@ Get_Available_Mem:
 	db 0x66
 	lgdt [_gdtptr]
 
-	;------------------------ enable PM -------------------------- 
+	;---------------------- 2. enable PM -------------------------- 
 	mov eax, cr0
 	or eax, 1
 	mov cr0, eax
@@ -282,6 +292,29 @@ Get_Available_Mem:
 	;-------------------- calculate avail mem ---------------------
 	call __calcumem
 	call __printmemsize
+
+	;------------------------- paging ---------------------------
+	call __setuppaging
+
+	sgdt [_gdtptr]
+
+	mov ebx, [_gdtptr + 2]						;base addr point to gdt base
+	or dword [ebx + 0x18 + 4], 0xc000_0000		;video desc maps to 0xc000_0000
+	add dword [_gdtptr + 2], 0xc000_0000
+	add esp, 0xc000_0000
+
+	mov eax, PAGE_DIR_BASE
+	mov cr3, eax
+
+	mov eax, cr0
+	or eax, 0x8000_0000
+	mov cr0, eax
+
+	lgdt [_gdtptr]
+
+	;----------------------- enter kernel -----------------------
+	call __initkernel
+	jmp SELECTOR_CODE:KERNEL_ENTERPOINT
 
 	jmp $
 
@@ -425,13 +458,10 @@ Get_Available_Mem:
 	;		esi = str addr printing
     ;OUT:   none
 	;NOTE:	caller need to reserve EAX cuz this function will change
-	push ebx
-	push ecx
-	push edx
 	push edi
 	push esi
 
-	mov esi, [esp + 4 * 6]						;str addr
+	mov esi, [esp + 4 * 3]						;str addr
 	mov edi, [DISPLAYPOS]						;screen offset
 	mov ah, 0x0f
 	.readchar:
@@ -460,9 +490,6 @@ Get_Available_Mem:
 
 	pop esi
 	pop edi
-	pop edx
-	pop ecx
-	pop ebx
 	ret
 
 	;------------------------ print hex -----------------------------
@@ -568,6 +595,128 @@ Get_Available_Mem:
 	pop eax
 	ret
 
+	;----------------------- setup paging ----------------------------
+    __setuppaging:
+	;INP:   none
+    ;OUT:   none
+	;NOTE:	[PAGE_DIR_BASE] 
+	push ebx
+	push ecx
+	push esi
+	
+	.createpde:
+	mov eax, PAGE_DIR_BASE						;eax = pde
+	add eax, 0x1000
+	mov ebx, eax								;back up ebx = 0x0010_1000
+	or eax, 0000_0111b							;fill in pde[0]/[c00] = 0x0010_1111
+	mov [PAGE_DIR_BASE], eax
+	mov [PAGE_DIR_BASE + 0xc00], eax			;0xc00 high 10-bits = 0x300 = 768
+	sub eax, 0x1000								;fill in pde[1023] = 0x0010_0111
+	mov [PAGE_DIR_BASE + 0xffc], eax
+
+	mov ecx, 256
+	mov esi, 0
+	xor eax, eax
+	or eax, 0000_0111b							;eax = 0x0000_0111
+	.createpte:
+	mov [ebx + esi], eax						;ebx = 0x0010_1000 <- eax = 0x0000_x111
+	add eax, 0x1000
+	add esi, 4
+	loop .createpte
+
+	mov ecx, 254								;from c01 ~ ff8
+	sub ebx, 0x1000								;base addr point to pde
+	mov esi, 0xc04								;offset addr point to pde index
+	mov eax, PAGE_DIR_BASE
+	add eax, 0x2000
+	or eax, 0000_0111b							;eax = 0x0010_2111
+	.createrestpde:
+	mov [ebx + esi], eax
+	add eax, 0x1000
+	add esi, 4
+	loop .createrestpde
+
+	push PAGINGMESS
+	call __printstr								;display "Paging get success!"
+	add esp, 4
+
+	pop esi
+	pop ecx
+	pop ebx
+	ret
+
+	;----------------------- copy memory to ----------------------------
+    __memcpy:
+	;INP:   stack 1 = size
+	;		stack 2 = src
+	;		stack 3 = dst
+    ;OUT:   virtual addr this seg in memory
+	;NOTE:	┬────┬
+	;		│size│
+	;		├────┤
+	;		│ src│
+	;		├────┤
+	;		│ dst│
+	;		├────┤
+	;		│ RET│
+	;		├────┤
+	;		│ ecx│
+	;		├────┤
+	;		│ edi│
+	;		├────┤
+	;		│ esi│
+	;		├────┤ <──esp
+	push ecx
+	push edi
+	push esi
+
+	mov edi, [esp + 4 * 4]						;edi = dst
+	mov esi, [esp + 4 * 5]						;esi = src
+	mov ecx, [esp + 4 * 6]						;ecx = size
+	cld
+	rep movsb									;ds:esi -> ds:edi
+
+	pop esi
+	pop edi
+	pop ecx
+	ret
+
+	;-------------------- initialize kernel --------------------------
+    __initkernel:
+	;INP:   stack 1 = size
+	;		stack 2 = src
+	;		stack 3 = dst
+    ;OUT:   virtual addr this seg in memory
+	push ebx
+	push ecx
+	push edx
+
+	xor ebx, ebx
+	xor ecx, ecx
+	xor edx, edx
+	mov ebx, [KERNEL_PHY_ADDR + 28]				;e_phoff: Prog Head Table phy mem
+	add ebx, KERNEL_PHY_ADDR
+	mov cx, [KERNEL_PHY_ADDR + 44]				;e_phnum: PHT entry amount
+	mov dx, [KERNEL_PHY_ADDR + 42]				;e_phentsize: each entry size of PHT
+	.movekernel:
+	cmp dword [ebx + 0], 0						;if PT_NULL?
+	jz .nextmove
+	push dword [ebx + 16]
+	mov eax, [ebx + 4]
+	add eax, KERNEL_PHY_ADDR
+	push eax
+	push dword [ebx + 8]
+	call __memcpy
+	add esp, 12
+	.nextmove:
+	add ebx, edx
+	loop .movekernel
+
+	pop edx
+	pop ecx
+	pop ebx
+	ret
+
 ;============================== label ================================
 [section .data16]
 align 32
@@ -585,6 +734,7 @@ _kernelfoundfail:   db "Error: KERNEL not found!"
 _kernelfoundsucc:	db "Start Kernel"
 _memorysize:		db "Memory size: ", 0
 _memoryunit:		db " KB", 10, 0
+_pagingmess:		db "Paging get success!", 0
 
 _availablemem:		dd	0
 _structards:
@@ -605,6 +755,7 @@ align 32
 DISPLAYPOS			equ LOADER_PHY_ADDR + _displaypos
 MEMORYSIZE			equ LOADER_PHY_ADDR + _memorysize
 MEMORYUNIT			equ LOADER_PHY_ADDR + _memoryunit
+PAGINGMESS			equ LOADER_PHY_ADDR + _pagingmess
 AVAILABLEMEM		equ LOADER_PHY_ADDR + _availablemem
 STRUCTARDS			equ LOADER_PHY_ADDR + _structards
 	BASEADDRLOW		equ LOADER_PHY_ADDR + _baseaddrlow
