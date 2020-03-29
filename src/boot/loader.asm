@@ -545,7 +545,7 @@ Get_Available_Mem:
 	add edi, 2
 	mov [DISPLAYPOS], edi						;renew screen offset: edi
 
-	mov eax, [esp + 4 * 3]							;one INT equal of double words
+	mov eax, [esp + 4 * 3]						;one INT equal of double words
 	shr eax, 24
 	call __printhex
 

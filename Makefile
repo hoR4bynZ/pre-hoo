@@ -18,10 +18,17 @@ imp = /media/
 
 # compiler & its parameters
 asm = nasm
-asminc = -I src/boot/include/
-gccinc = -I src/lib/kernel/ -I src/lib/
 cc = gcc
 ld = ld
+
+asminc = -I src/boot/include/
+gccinc = -I src/lib/kernel/ -I src/lib/ -I src/kernel/
+
+# -fno-builtin 是要求gcc不主动使用自己的内建函数，除非显式声明
+# -nostdinc 是不包含c语言标准库里的头文件
+fcc = -c -Wall -m32 -nostdinc -fno-builtin $(gccinc)
+fasm = -f elf
+fld = -e main -m elf_i386 -Ttext 0xc0001000
 
 
 
@@ -32,6 +39,7 @@ ld = ld
 # 相当于中间文件/目标文件生成在 -> "工程目录"/target/boot
 boot = $(tb)/boot.bin $(tb)/loader.bin
 kernel = $(tk)/kernel.bin
+materials = $(tk)/main.o $(tk)/print.o $(tk)/prointrhdl.o $(tk)/interrupt.o $(tk)/init.o
 
 
 
@@ -50,8 +58,7 @@ nop:
 	@echo "cleanall	clean all intermediate and target files"
 
 # compile all files
-all: $(boot)
-all: $(kernel)
+all: $(boot) $(kernel)
 
 
 # target writes into image
@@ -68,8 +75,7 @@ bochs: $(fd)
 	$(xpath)/bochs -q
 
 # prompt
-run: $(fd)
-	@echo "使用虚拟机挂载$(fd)即可开始运行"
+run: all image bochs
 
 # clean all intermediate files
 clean: 
@@ -93,27 +99,33 @@ $(fd):
 
 #  make boot.bin
 # @用target/label代替；<用prerequisites代替
-$(tb)/boot.bin: src/boot/include/fat12.inc
 $(tb)/boot.bin: src/boot/boot.asm
 	$(asm) $(asminc) -o $@ $<
 
 # make loader.bin
-$(tb)/loader.bin: src/boot/include/fat12.inc
-$(tb)/loader.bin: src/boot/include/loader.inc
 $(tb)/loader.bin: src/boot/loader.asm
 	$(asm) $(asminc) -o $@ $<
 
 # make print.o
 $(tk)/print.o: src/lib/kernel/print.asm
-	$(asm) -f elf -o $@ $<
+	$(asm) $(fasm) -o $@ $<
+
+# make prointrhdl.o
+$(tk)/prointrhdl.o: src/kernel/prointrhdl.asm
+	$(asm) $(fasm) -o $@ $<
 
 # make main.o
-$(tk)/main.o: src/lib/kernel/print.h
-$(tk)/main.o: src/lib/stdint.h
 $(tk)/main.o: src/kernel/main.c
-	$(cc) -c -m32 $(gccinc) -o $@ $<
+	$(cc) $(fcc) -o $@ $<
 
-# make kernel.bin
-$(tk)/kernel.bin: $(tk)/main.o
-$(tk)/kernel.bin: $(tk)/print.o
-	$(ld) -e main -m elf_i386 -Ttext 0xc0001000 -o $@ $(tk)/main.o $(tk)/print.o
+# make interrupt.o
+$(tk)/interrupt.o: src/kernel/interrupt.c
+	$(cc) $(fcc) -o $@ $<
+
+# make init.o
+$(tk)/init.o: src/kernel/init.c
+	$(cc) $(fcc) -o $@ $<
+
+# make kernel.bin  !!!!!!!!!!!
+$(tk)/kernel.bin: $(materials)
+	$(ld) $(fld) -o $@ $^

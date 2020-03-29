@@ -1,16 +1,10 @@
 #include "print.h"
+#include "init.h"
 
-void main(void) {
-    __printchar('k');
-    __printchar('e');
-    __printchar('r');
-    __printchar('n');
-    __printchar('e');
-    __printchar('l');
-    __printchar('k');
-    __printchar('\b');
-    __printchar('\n');
-    __printchar('!');
-
+int main(void) {
+    __printstr("\n");
+    __printstr("Hello Operating System!\n");
+    __initAll();
+    asm volatile("sti");
     while(1);
 }

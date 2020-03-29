@@ -1,12 +1,103 @@
 SELECTOR_VIDEO		equ 0x18
 
+[section .data]
 [bits 32]
+_buf:       dq 0
+
 [section .text]
-global __printchar
+[bits 32]
+global __printstr
+global __printint
 
 ;============================ func __printchar =========================
+;-----------------------------------------------------------------------
+__printstr:
+;NOTE:  __printstr(char *);
+    push ebx
+    push ecx
+
+    xor ecx, ecx
+    mov ebx, [esp + 4 * 3]
+    .beginprint:
+    mov cl, [ebx]
+    cmp cl, 0
+    jz .lastchar
+    push ecx
+    call __printchar
+    add esp, 4                                  ;PUSH one parameter then clean stack munual
+    inc ebx
+    jmp .beginprint
+    .lastchar:
+    pop ecx
+    pop ebx
+    ret
+
+;-----------------------------------------------------------------------
+__printint:
+;INP:   stack = int
+;OUT:   __printstr(char *);
+	pushad
+
+    .printprefix:                               ;print prefix: "0x"
+    xor ebx, ebx
+    mov bl, '0'
+    push ebx
+    call __printchar
+    add esp, 4
+    mov bl, 'x'
+    push ebx
+    call __printchar
+    add esp, 4
+
+    mov eax, [esp + 4 * 9]
+    mov ebx, _buf
+    mov ecx, 8                                  ;loop 8 times cuz 32 / 4 = 8
+    mov edx, eax                                ;backup EAX
+    mov edi, 7                                  ;point to the last bit of _buf
+
+    .convert:
+	and edx, 0xf
+	cmp edx, 9
+	ja .letter									;large than 9
+	add edx, '0'									;below 9 add '0'
+	jmp .output
+	.letter:
+	sub edx, 10									;beyond 9 subs 10 add 'a'
+	add edx, 'a'
+	.output:
+	mov [ebx + edi], dl
+	dec edi
+	shr eax, 4
+    mov edx, eax
+	loop .convert
+
+    .skipzero:                                  ;the codition when sequential zero 
+                                                ;    occurs at begin
+    inc edi
+    cmp edi, 8
+    jz .fillinzero
+    mov cl, [_buf + edi]
+    cmp cl, '0'
+    jz .skipzero                                ;skip sequential zero at begin
+    jmp .beginprint
+    .fillinzero:
+    mov cl, '0'
+
+    .beginprint:
+    push ecx
+    call __printchar
+    add esp, 4
+    inc edi
+    mov cl, [_buf + edi]
+    cmp edi, 8
+    jl .beginprint
+
+    popad
+	ret
+
+;-----------------------------------------------------------------------
 __printchar:
-;NOTE: __printchar(char *)
+;NOTE:  __printchar(char *);
     pushad                                      ;eax-ecx-edx-ebx-esp-ebp-esi-edi
     mov ax, SELECTOR_VIDEO
     mov gs, ax
