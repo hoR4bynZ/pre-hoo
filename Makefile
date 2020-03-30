@@ -39,7 +39,8 @@ fld = -e main -m elf_i386 -Ttext 0xc0001000
 # 相当于中间文件/目标文件生成在 -> "工程目录"/target/boot
 boot = $(tb)/boot.bin $(tb)/loader.bin
 kernel = $(tk)/kernel.bin
-materials = $(tk)/main.o $(tk)/print.o $(tk)/prointrhdl.o $(tk)/interrupt.o $(tk)/init.o $(tk)/timer.o
+materials = $(tk)/main.o $(tk)/print.o $(tk)/prointrhdl.o $(tk)/interrupt.o \
+			$(tk)/init.o $(tk)/timer.o $(tk)/debug.o
 
 
 
@@ -91,14 +92,16 @@ cleanall: clean
 
 
 #=========================================================================
-#  .bin make rules
+#  make files
 #-------------------------------------------------------------------------
 # make image when not exists
 $(fd):
 	$(xpath)/bximage
 
+#=========================================================================
+#  asm compile
+#-------------------------------------------------------------------------
 #  make boot.bin
-# @用target/label代替；<用prerequisites代替
 $(tb)/boot.bin: src/boot/boot.asm
 	$(asm) $(asminc) -o $@ $<
 
@@ -114,6 +117,9 @@ $(tk)/print.o: src/lib/kernel/print.asm
 $(tk)/prointrhdl.o: src/kernel/prointrhdl.asm
 	$(asm) $(fasm) -o $@ $<
 
+#=========================================================================
+#  gcc compile
+#-------------------------------------------------------------------------
 # make main.o
 $(tk)/main.o: src/kernel/main.c
 	$(cc) $(fcc) -o $@ $<
@@ -130,6 +136,12 @@ $(tk)/init.o: src/kernel/init.c
 $(tk)/timer.o: src/device/timer.c
 	$(cc) $(fcc) -o $@ $<
 
+# make debug.o
+$(tk)/debug.o: src/kernel/debug.c
+	$(cc) $(fcc) -o $@ $<
+#=========================================================================
+#  link all obj
+#-------------------------------------------------------------------------
 # make kernel.bin
 $(tk)/kernel.bin: $(materials)
 	$(ld) $(fld) -o $@ $^

@@ -4,11 +4,13 @@
 #include "print.h"
 #include "interrupt.h"
 
-#define PIC_M_CTRL 0X20
-#define PIC_M_DATA 0X21
-#define PIC_S_CTRL 0Xa0
-#define PIC_S_DATA 0Xa1
-#define IDT_CNT    0x21
+#define PIC_M_CTRL  0X20
+#define PIC_M_DATA  0X21
+#define PIC_S_CTRL  0Xa0
+#define PIC_S_DATA  0Xa1
+#define IDT_CNT     0x21
+#define EFLAGS_IF   0X00000200
+#define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0": "=g"(EFLAG_VAR))
 
 
 // ====================================== global define =======================================
@@ -36,6 +38,57 @@ _intrHandler _intrhdlprog[IDT_CNT];
 
 
 // ======================================= function ===========================================
+// ----------------------------------- enable interrupt ------------------------------------
+enum _intrStatus __intrEnable () {
+    enum _intrStatus oldStatus;
+    if (INTR_ON == __intrGetStatus()) {                 // 当前状态是否开中断
+        oldStatus = INTR_ON;
+        return oldStatus;
+    }else{
+        oldStatus = INTR_OFF;
+        asm volatile("sti");                            // 否：开中断
+        return oldStatus;
+    }
+}
+
+
+
+
+// ---------------------------------- disable interrupt ------------------------------------
+enum _intrStatus __intrDisable () {
+    enum _intrStatus oldStatus;
+    if (INTR_ON == __intrGetStatus()) {                 // 当前状态是否关中断
+        oldStatus = INTR_ON;
+        asm volatile("cli": : : "memory");              // 否：关中断
+        return oldStatus;
+    }else{
+        oldStatus = INTR_OFF;
+        return oldStatus;
+    }
+}
+
+
+
+
+// ----------------------------------- set status --------------------------------------------
+enum _intrStatus __intrSetStatus (enum _intrStatus status) {
+    return status & INTR_ON ? __intrEnable() : __intrDisable();
+}
+
+
+
+
+// ---------------------------------- get status ----------------------------------------------
+enum _intrStatus __intrGetStatus () {
+    uint32 eflags = 0;
+    GET_EFLAGS(eflags);
+    //        IF位    & 当前状态
+    return (EFLAGS_IF & eflags) ? INTR_ON : INTR_OFF;
+}
+
+
+
+
 // ------------------ initialize Programmable Interrupt Controller 8259A ----------------------
 static void __initPic (void) {
 
