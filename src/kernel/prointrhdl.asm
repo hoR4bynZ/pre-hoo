@@ -3,28 +3,43 @@
 %define COMMON      push 0
 
 extern __printstr
-global _intrhdlprog
+extern _intrhdlprog
+global _intrhdlprogent
+global _intrext
 
-section .data
+[section .data]
 _intrstr:   db "interrupt occur!", 0xa, 0
-_intrhdlprog:
+_intrhdlprogent:
 
 %macro INTR_VERTOR 2
-section .text
+[section .text]
     intr%1entry:
         %2
-        push _intrstr
-        call __printstr                 ; print str "interrupt occur!"
-        add esp, 4
+        ; 调用C语言的中断处理程序，一定要先保护现场
+        push ds
+        push es
+        push fs
+        push gs
+        pushad
 
-        mov al, 0x20                    ; munual EOI
+        mov al, 0x20                    ; exec OCW2, munual EOI
         out 0xa0, al
         out 0x20, al
 
+        ; 以中断向量号作为参数，_intrhdlprog[]保存的是函数地址
+        ; 此处调用的是C中定义的中断处理程序，而函数地址32位，故索引*4Byte = 偏移
+        push %1
+        call [_intrhdlprog + %1 * 4]
+
+        add esp, 4                      ; skip interrupt vector
+        popad
+        pop gs
+        pop fs
+        pop es
+        pop ds
         add esp, 4                      ; skip error code when call iret
         iret
-
-section .data
+[section .data]
     dd intr%1entry
 %endmacro
 

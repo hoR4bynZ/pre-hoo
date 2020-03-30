@@ -22,7 +22,7 @@ cc = gcc
 ld = ld
 
 asminc = -I src/boot/include/
-gccinc = -I src/lib/kernel/ -I src/lib/ -I src/kernel/
+gccinc = -I src/lib/kernel/ -I src/lib/ -I src/kernel/ -I src/device/
 
 # -fno-builtin 是要求gcc不主动使用自己的内建函数，除非显式声明
 # -nostdinc 是不包含c语言标准库里的头文件
@@ -39,7 +39,7 @@ fld = -e main -m elf_i386 -Ttext 0xc0001000
 # 相当于中间文件/目标文件生成在 -> "工程目录"/target/boot
 boot = $(tb)/boot.bin $(tb)/loader.bin
 kernel = $(tk)/kernel.bin
-materials = $(tk)/main.o $(tk)/print.o $(tk)/prointrhdl.o $(tk)/interrupt.o $(tk)/init.o
+materials = $(tk)/main.o $(tk)/print.o $(tk)/prointrhdl.o $(tk)/interrupt.o $(tk)/init.o $(tk)/timer.o
 
 
 
@@ -126,6 +126,10 @@ $(tk)/interrupt.o: src/kernel/interrupt.c
 $(tk)/init.o: src/kernel/init.c
 	$(cc) $(fcc) -o $@ $<
 
-# make kernel.bin  !!!!!!!!!!!
+# make timer.o
+$(tk)/timer.o: src/device/timer.c
+	$(cc) $(fcc) -o $@ $<
+
+# make kernel.bin
 $(tk)/kernel.bin: $(materials)
 	$(ld) $(fld) -o $@ $^

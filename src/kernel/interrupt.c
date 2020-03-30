@@ -2,6 +2,7 @@
 #include "io.h"
 #include "global.h"
 #include "print.h"
+#include "interrupt.h"
 
 #define PIC_M_CTRL 0X20
 #define PIC_M_DATA 0X21
@@ -24,9 +25,12 @@ struct _gateDesc{
 
 
 // ===================================== global proclaim ======================================
-static void __makeIdt(struct _gateDesc * pDesc, uint8 attr, void * prointrhdladdr);
+/* _intrhdlprogent[]是入口地址数组; idt[]是中断描述符表; _intrhdlprog[]是中断处理程序数组[] */
+extern _intrHandler _intrhdlprogent[IDT_CNT];
+static void __makeIdt(struct _gateDesc * pDesc, uint8 attr, _intrHandler prointrhdladdr);
 static struct _gateDesc idt[IDT_CNT];
-extern void *_intrhdlprog[IDT_CNT];
+char *_intrName[IDT_CNT];
+_intrHandler _intrhdlprog[IDT_CNT];
 
 
 
@@ -122,6 +126,7 @@ static void __initPic (void) {
      *        1  1  1  1  1  1  1  1
      *       0x1111_1111 -> 0xff
      *       屏蔽IRQ15、IRQ14、IRQ13、IRQ12、IRQ11、IRQ10、IRQ9、IRQ8
+     *       [注] 实际上IRQ15、IRQ7对应的中断没有办法被IMR也即OCW1屏蔽
      */
      /* 相当于只打开IRQ0 */
     __outB(PIC_M_DATA, 0xfe);
@@ -134,12 +139,12 @@ static void __initPic (void) {
 
 
 // ------------------------------ make IDT descriptor ---------------------------------
-static void __makeIdt (struct _gateDesc * pDesc, uint8 attr, void * prointrhdladdr) {
+static void __makeIdt (struct _gateDesc * pDesc, uint8 attr, _intrHandler prointrhdladdr) {
     pDesc->_proIntrHdlAddrLow = (uint32)prointrhdladdr & 0x0000ffff;
     pDesc->_selector = SELECTOR_K_CODE;                             // macro define at "global.h"
     pDesc->_reserve = 0;
     pDesc->_attribute = attr;
-    pDesc->_proIntrHdlAddrHigh = (uint32)prointrhdladdr & 0xffff0000 >> 16;
+    pDesc->_proIntrHdlAddrHigh = ((uint32)prointrhdladdr & 0xffff0000) >> 16;
 }
 
 
@@ -149,17 +154,66 @@ static void __makeIdt (struct _gateDesc * pDesc, uint8 attr, void * prointrhdlad
 static void __initIdtDesc (void) {
     int i;
     for (i = 0; i < IDT_CNT; i++)
-        __makeIdt(&idt[i], IDT_DESC_ATTR_DPL0, _intrhdlprog[i]);    // macro define at "global.h"
+        __makeIdt(&idt[i], IDT_DESC_ATTR_DPL0, _intrhdlprogent[i]);    // macro define at "global.h"
     __printstr("    idt initialization!\n");
 }
 
 
 
 
-// ------------------------ initialize all interruption --------------------------------
+// --------------------------------- general interrupt -----------------------------------
+static void __intrGeneral (uint8 vec) {
+    if (vec == 0x27 || vec == 0x2f) {
+        // 刚才__initPic()中OCW1[注]谈及的两个无法屏蔽的中断：
+        // IRQ15 即 0x2f，因为起始中断号从0x20开始
+        // IRQ7  即 0x27，同理
+        return;
+    }
+    __printstr("INT VECTOR : ");
+    __printint(vec);
+    __printstr("\n");
+}
+
+
+
+
+// --------------------------------- specify interrupt -----------------------------------
+static void __intrSpecify (void) {
+    int i;
+    for (i = 0; i < IDT_CNT; i++) {
+        _intrhdlprog[i] = __intrGeneral;
+        _intrName[i] = "unknown";
+    }
+    
+    _intrName[0] = "#DE Divide Error";
+    _intrName[1] = "#DB debug Exception";
+    _intrName[2] = "#NMI Interrupt";
+    _intrName[3] = "#BP Breakpoint Exception";
+    _intrName[4] = "#OF Overflow Exception";
+    _intrName[5] = "#BR BOUND Range Exceeded Exception";
+    _intrName[6] = "#UD Invalid Opcode Exception";
+    _intrName[7] = "#NM Device Not Available Exception";
+    _intrName[8] = "#DF Double Fault Exception";
+    _intrName[9] = "Coprocessor Segment Overrun";
+    _intrName[10] = "#TS Invalid TSS Exception";
+    _intrName[11] = "#NP Segment Not Present";
+    _intrName[12] = "#SS Stack Fault Exception";
+    _intrName[13] = "#GP General Protection Exception";
+    _intrName[14] = "#PF Page-Fault Exception";
+    _intrName[16] = "#MF x87 FPU Floating-Point Error";
+    _intrName[17] = "#AC Alignment Check Exception";
+    _intrName[18] = "#MC Machine-Check Exception";
+    _intrName[19] = "#XF SIMD Floating-Point Exception";
+}
+
+
+
+
+// ------------------------ initialize all interruption ----------------------------------
 void __initIdt () {
     __printstr("IDT initialization start: \n");
     __initIdtDesc();                                                //初始化中断描述符表
+    __intrSpecify();                                                //初始化专用的异常名
     __initPic();                                                    //初始化 8529A
 
     /* 加载IDT */
