@@ -416,7 +416,7 @@ Get_Available_Mem:
 	;--------------------- calculate available mem ----------------------
     __calcumem:
 	;INP:   ARDS buffer
-    ;OUT:   [AVAILABLEMEM]
+    ;OUT:   [BOOTPARAM_ADDR]
 	push esi
 	push ecx
 	push edx
@@ -440,9 +440,9 @@ Get_Available_Mem:
 	jnz .calculfsh								;memory wont available
 	mov eax, [BASEADDRLOW]
 	add eax, [LENGTHLOW]
-	cmp [AVAILABLEMEM], eax
+	cmp [BOOTPARAM_ADDR], eax
 	jge .calculfsh								;great or equal
-	mov dword [AVAILABLEMEM], eax
+	mov dword [BOOTPARAM_ADDR], eax
 	.calculfsh:
 	loop .prepare
 
@@ -574,7 +574,7 @@ Get_Available_Mem:
 	push edx
 
 	xor edx, edx
-	mov eax, [AVAILABLEMEM]
+	mov eax, [BOOTPARAM_ADDR]
 	mov ebx, 1024
 	div ebx										;retain EAX
 
@@ -736,7 +736,7 @@ _memorysize:		db "Memory size: ", 0
 _memoryunit:		db " KB", 10, 0
 _pagingmess:		db "Paging get success!", 0
 
-_availablemem:		dd	0
+;_availablemem:		dd	0
 _structards:
 	_baseaddrlow:	dd	0
 	_baseaddrhigh:	dd	0
@@ -756,7 +756,7 @@ DISPLAYPOS			equ LOADER_PHY_ADDR + _displaypos
 MEMORYSIZE			equ LOADER_PHY_ADDR + _memorysize
 MEMORYUNIT			equ LOADER_PHY_ADDR + _memoryunit
 PAGINGMESS			equ LOADER_PHY_ADDR + _pagingmess
-AVAILABLEMEM		equ LOADER_PHY_ADDR + _availablemem
+;AVAILABLEMEM		equ LOADER_PHY_ADDR + _availablemem
 STRUCTARDS			equ LOADER_PHY_ADDR + _structards
 	BASEADDRLOW		equ LOADER_PHY_ADDR + _baseaddrlow
 	BASEADDRHIGH	equ LOADER_PHY_ADDR + _baseaddrhigh

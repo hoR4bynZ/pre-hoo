@@ -46,7 +46,7 @@ int __memcmp (const void* a_, const void* b_, uint32 size) {
 char* __strcpy (char* dst_, const char* src_) {
     ASSERT(dst_ != NULL && src_ != NULL);
     char* r = dst_;
-    while((*dst_++ = *src__++));
+    while((*dst_++ = *src_++));
     return r;
 }
 

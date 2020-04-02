@@ -1,5 +1,9 @@
 #ifndef __LIB_STDINT_H
 #define __LIB_STDINT_H
+#define NULL 0
+#define true  1
+#define false 0
+enum bool {false, true};
 typedef   signed          char      int8;
 typedef   signed     short int      int16;
 typedef   signed           int      int32;

@@ -40,7 +40,8 @@ fld = -e main -m elf_i386 -Ttext 0xc0001000
 boot = $(tb)/boot.bin $(tb)/loader.bin
 kernel = $(tk)/kernel.bin
 materials = $(tk)/main.o $(tk)/print.o $(tk)/prointrhdl.o $(tk)/interrupt.o \
-			$(tk)/init.o $(tk)/timer.o $(tk)/debug.o
+			$(tk)/init.o $(tk)/timer.o $(tk)/debug.o $(tk)/memory.o			\
+			$(tk)/bitmap.o $(tk)/string.o
 
 
 
@@ -138,6 +139,18 @@ $(tk)/timer.o: src/device/timer.c
 
 # make debug.o
 $(tk)/debug.o: src/kernel/debug.c
+	$(cc) $(fcc) -o $@ $<
+
+# make memory.o
+$(tk)/memory.o: src/kernel/memory.c
+	$(cc) $(fcc) -o $@ $<
+
+# make bitmap.o
+$(tk)/bitmap.o: src/lib/kernel/bitmap.c
+	$(cc) $(fcc) -o $@ $<
+
+# make string.o
+$(tk)/string.o: src/lib/string.c
 	$(cc) $(fcc) -o $@ $<
 #=========================================================================
 #  link all obj
