@@ -27,4 +27,5 @@ struct _virAddr {
 
 extern struct _phyAddr pkernel, puser;
 void __initMem(void);
+void* __kpageAlloc(uint32);
 #endif

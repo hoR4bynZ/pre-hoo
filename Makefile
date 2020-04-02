@@ -22,7 +22,8 @@ cc = gcc
 ld = ld
 
 asminc = -I src/boot/include/
-gccinc = -I src/lib/kernel/ -I src/lib/ -I src/kernel/ -I src/device/
+gccinc = -I src/lib/kernel/ -I src/lib/ -I src/kernel/ -I src/device/ \
+			-I src/thread
 
 # -fno-builtin 是要求gcc不主动使用自己的内建函数，除非显式声明
 # -nostdinc 是不包含c语言标准库里的头文件
@@ -41,7 +42,7 @@ boot = $(tb)/boot.bin $(tb)/loader.bin
 kernel = $(tk)/kernel.bin
 materials = $(tk)/main.o $(tk)/print.o $(tk)/prointrhdl.o $(tk)/interrupt.o \
 			$(tk)/init.o $(tk)/timer.o $(tk)/debug.o $(tk)/memory.o			\
-			$(tk)/bitmap.o $(tk)/string.o
+			$(tk)/bitmap.o $(tk)/string.o $(tk)/thread.o
 
 
 
@@ -151,6 +152,10 @@ $(tk)/bitmap.o: src/lib/kernel/bitmap.c
 
 # make string.o
 $(tk)/string.o: src/lib/string.c
+	$(cc) $(fcc) -o $@ $<
+
+# make thread.o
+$(tk)/thread.o: src/thread/thread.c
 	$(cc) $(fcc) -o $@ $<
 #=========================================================================
 #  link all obj

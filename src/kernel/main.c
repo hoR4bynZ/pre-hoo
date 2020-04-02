@@ -1,16 +1,22 @@
 #include "print.h"
 #include "init.h"
-#include "debug.h"
+#include "thread.h"
+
+void k_thread(void*);
 
 int main(void) {
     __printstr("\n");
     __printstr("Hello Operating System!\n");
     __initAll();
 
-    void* addr = __kpageAlloc(3);
-    __printstr("Kernel Pages Allocing start ::: the vir-addr is: ");
-    __printint((uint32)addr);
-    __printstr("\n");
+    __startThread("k_thread", 3, k_thread, "argA");
     
     while(1);
+}
+
+void k_thread (void* arg) {
+    char* para = arg;
+    while(1) {
+        __printstr(para);
+    }
 }

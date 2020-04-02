@@ -11,7 +11,7 @@ struct _bitmap {
 };
 
 void __btmpInit(struct _bitmap* btmp);
-bool __btmpScanTest(struct _bitmap* btmp, uint32 bitIndex);
+int __btmpScanTest(struct _bitmap* btmp, uint32 bitIndex);
 int __btmpScan(struct _bitmap* btmp, uint32 cnt);
 void __btmpSet(struct _bitmap* btmp, uint32 bitIndex, int8 value);
 #endif

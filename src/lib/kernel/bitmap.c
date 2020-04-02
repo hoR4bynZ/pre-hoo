@@ -14,7 +14,7 @@ void __btmpInit (struct _bitmap* btmp) {
 
 
 // ------------------- judge current bit status -----------------------
-bool __btmpScanTest (struct _bitmap* btmp, uint32 bitIndex) {
+int __btmpScanTest (struct _bitmap* btmp, uint32 bitIndex) {
     uint32 idxByte = bitIndex / 8;
     uint32 idxOdd = bitIndex % 8;
     //      ╭> 寻址到某字节                                 ╭> 寻址到某位
