@@ -8,8 +8,10 @@ _buf:       dq 0
 [bits 32]
 global __printstr
 global __printint
+global __printchar
+global __setcursor
 
-;============================ func __printchar =========================
+;=================================== func ==============================
 ;-----------------------------------------------------------------------
 __printstr:
 ;NOTE:  __printstr(char *);
@@ -135,7 +137,7 @@ __printchar:
     shl bx, 1                                   ;equal to multiply 2
     mov word [gs: bx], 0x0720
     shr bx, 1
-    jmp .setcursor
+    jmp __setcursor
 
     ;--------------------------- print char -------------------------------
     .otherchar:
@@ -146,7 +148,7 @@ __printchar:
     shr bx, 1
     inc bx                                      ;become next addr printing
     cmp bx, 2000                                ;check each increment
-    jl .setcursor
+    jl __setcursor
 
     ;----------------------------- CRLF -----------------------------------
     .carriage_return:
@@ -159,7 +161,7 @@ __printchar:
 
     add bx, 80
     cmp bx, 2000
-    jl .setcursor
+    jl __setcursor
 
     ;--------------------------- roll screen ------------------------------
     ;movsd: esi to edi
@@ -179,7 +181,7 @@ __printchar:
     mov bx, 1920
 
     ;-------------------------- set cursor --------------------------------
-    .setcursor:
+__setcursor:
     mov dx, 0x03d4
     mov al, 0xe
     out dx, al

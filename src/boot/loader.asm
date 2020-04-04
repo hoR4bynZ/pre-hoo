@@ -314,6 +314,7 @@ Get_Available_Mem:
 
 	;----------------------- enter kernel -----------------------
 	call __initkernel
+	mov esp, 0xc009_f000
 	jmp SELECTOR_CODE:KERNEL_ENTERPOINT
 
 	jmp $

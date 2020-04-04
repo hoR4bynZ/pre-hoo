@@ -1,6 +1,7 @@
 #ifndef __THREAD_THREAD_H
 #define __THREAD_THREAD_H
 #include "stdint.h"
+#include "list.h"
 
 typedef void __threadFunc(void*);
 
@@ -54,14 +55,23 @@ struct thdStack {
 
 //pcb
 struct pcb {
-    uint32* kStack;     //线程内核栈栈顶指针
+    uint32* kStack;             //线程内核栈栈顶指针
     enum procStatus status;
-    uint8 priority;
     char name[16];
+    uint8 priority;
+    uint8 ticks;                //时间片
+    uint32 ticksElapsed;        //被调度开始至结束占用了多少个时间片
+    struct listNode genNode;    //线程在一般队列中用genNode结点表示
+    struct listNode thdNode;    //线程在线程队列中用thdNode结点表示
+    uint32* ptvAddr;            //进程页表的虚拟地址
     uint32 magicNumber;
 };
 
+struct pcb* __thdAddr();
+//static void __thdKernel(__threadFunc* function, void* funcArg);
 void __createThread(struct pcb* pthread, __threadFunc function, void* funcArg);
 void __initThread(struct pcb* pthread, char* name, int prio);
 struct pcb* __startThread(char* name, int prio, __threadFunc function, void* funcArg);
+void __initThreadMulti(void);
+void __schedule(void);
 #endif

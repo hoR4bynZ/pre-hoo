@@ -30,18 +30,23 @@ _intrhdlprogent:
         ; 此处调用的是C中定义的中断处理程序，而函数地址32位，故索引*4Byte = 偏移
         push %1
         call [_intrhdlprog + %1 * 4]
+        jmp _intrext
 
-        add esp, 4                      ; skip interrupt vector
-        popad
-        pop gs
-        pop fs
-        pop es
-        pop ds
-        add esp, 4                      ; skip error code when call iret
-        iret
 [section .data]
     dd intr%1entry
 %endmacro
+[section .text]
+_intrext:
+    add esp, 4                          ; skip interrupt vector
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    add esp, 4                          ; skip error code when call iret
+    iretd
+
+
 
 INTR_VERTOR 0x00, COMMON
 INTR_VERTOR 0x01, COMMON

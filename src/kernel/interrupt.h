@@ -9,7 +9,8 @@ enum _intrStatus {              // interrupt status
     INTR_ON                     // interrupt on
 };
 enum _intrStatus __intrGetStatus(void);
-enum _intrStatus __intrsetStatus(enum _intrStatus);
+enum _intrStatus __intrSetStatus(enum _intrStatus);
 enum _intrStatus __intrEnable(void);
 enum _intrStatus __intrDisable(void);
+void __registerIntr(uint8 vec, _intrHandler function);
 #endif

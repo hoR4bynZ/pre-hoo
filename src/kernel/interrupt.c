@@ -222,9 +222,29 @@ static void __intrGeneral (uint8 vec) {
         // IRQ7  即 0x27，同理
         return;
     }
-    __printstr("INT VECTOR : ");
-    __printint(vec);
-    __printstr("\n");
+
+    __setcursor(0);                                     // 光标设为0，左上角
+    int cursorPos = 0;
+    while(cursorPos < 320){                             // 清空前4行
+        __printchar(' ');
+        cursorPos++;
+    }
+    __setcursor(0);
+    __printstr("                   ########## EXCETION ##########\n");
+    __setcursor(88);                                    // 第2行第8个字符 80 + 8
+    __printstr(_intrName[vec]);
+    if(vec == 14){
+        int pageFualuAddr = 0;
+        asm ("movl %%cr2, %0" : "=r" (pageFualuAddr));  //缺页异常时cr2会保存异常的页——没有映射的虚拟地址的页
+        __printstr("\n                   Page Fault Addr is ");
+        __printint(pageFualuAddr);
+    }
+    __printstr("\n                   ##########   END  ##########\n");
+    while(1);
+
+    // __printstr("INT VECTOR : ");
+    // __printint(vec);
+    // __printstr("\n");
 }
 
 
@@ -273,4 +293,13 @@ void __initIdt () {
     uint64 _idtAddr = ( (sizeof(idt) - 1) | ((uint64)((uint32)idt << 16)) );
     asm volatile("lidt %0": :"m"(_idtAddr));
     __printstr("All the interruption initialized!\n");
+}
+
+
+
+
+// ------------------------ register for _intrhdlprog[] ----------------------------------
+void __registerIntr(uint8 vec, _intrHandler function){
+    //在中断处理程序数组_intrhdlprog[]的vec号元素中写入函数路径
+    _intrhdlprog[vec] = function;
 }

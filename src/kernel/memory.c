@@ -178,6 +178,8 @@ static void* __valloc (enum poolFlag pf, uint32 pCnt) {
     }else{
         //////////////////////////////////////////////////用户虚拟池
     }
+
+    // 返回虚拟地址
     return (void*)vaddrBase;
 }
 
@@ -210,11 +212,13 @@ static void* __palloc(struct _phyAddr* mPool) {
     }
     __btmpSet(&mPool->bitmapPool, idxBtmpBase, 1);
     //返回物理地址 = 物理池起始 + 位图对应地址
-    uint32 pagePhyaddr = (mPool->phyAddrBase + idxBtmpBase * PG_SIZE);
+    uint32 pagePhyaddr = mPool->phyAddrBase + idxBtmpBase * PG_SIZE;
     // __printstr("            (DEBUG :: pagePhyaddr) => ");
     // __printint(pagePhyaddr);
     // __printstr("\n");
     // while(1);
+
+    // 返回物理地址
     return (void*)pagePhyaddr;
 }
 
@@ -342,5 +346,6 @@ void* __kpageAlloc (uint32 pCnt) {
     if (vaddr) {
         __memset(vaddr, 0, pCnt * PG_SIZE);         // 将申请的物理页清0
     }
+    // 返回虚拟地址
     return vaddr;
 }

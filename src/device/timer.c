@@ -1,6 +1,10 @@
 #include "timer.h"
 #include "io.h"
 #include "print.h"
+#include "stdint.h"
+#include "interrupt.h"
+#include "thread.h"
+#include "debug.h"
 
 #define FREQUENCY_IRQ0          100
 #define FREQUENCY_COUNTER       1193180
@@ -10,6 +14,8 @@
 #define CONTROL_WORD_COUNTER    0
 #define CONTROL_WORD_RW         3
 #define CONTROL_WORD_MODE       2
+
+uint32 ticks;                           //ticks是内核自终端开启以来的时间片
 
 static void __setFrequency (uint8 portCounter, uint8 ctlWCounter, uint8 ctlWRW, uint8 ctlWMode, uint16 value) {
     /* 8253控制字格式
@@ -36,5 +42,21 @@ static void __setFrequency (uint8 portCounter, uint8 ctlWCounter, uint8 ctlWRW, 
 void __initTimer () {
     __printstr("Timer initialization start: \n");
     __setFrequency(PORT_COUNTER0, CONTROL_WORD_COUNTER, CONTROL_WORD_RW, CONTROL_WORD_MODE, VALUE);
+    __registerIntr(0x20, __intrTimer);
     __printstr("    Timer initialization success!\n");
+}
+
+static void __intrTimer(void){
+    struct pcb* curThread = __thdAddr();
+
+    //检测栈溢出
+    ASSERT(curThread->magicNumber == 0x97321679);
+    curThread->ticksElapsed++;
+    ticks++;
+
+    if(curThread->ticks){
+        __schedule();
+    }else{
+        curThread->ticks--;
+    }
 }

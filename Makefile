@@ -40,9 +40,10 @@ fld = -e main -m elf_i386 -Ttext 0xc0001000
 # 相当于中间文件/目标文件生成在 -> "工程目录"/target/boot
 boot = $(tb)/boot.bin $(tb)/loader.bin
 kernel = $(tk)/kernel.bin
-materials = $(tk)/main.o $(tk)/print.o $(tk)/prointrhdl.o $(tk)/interrupt.o \
+materials = $(tk)/main.o $(tk)/prointrhdl.o $(tk)/interrupt.o $(tk)/print.o \
 			$(tk)/init.o $(tk)/timer.o $(tk)/debug.o $(tk)/memory.o			\
-			$(tk)/bitmap.o $(tk)/string.o $(tk)/thread.o
+			$(tk)/bitmap.o $(tk)/string.o $(tk)/thread.o $(tk)/list.o		\
+			$(tk)/switch.o
 
 
 
@@ -119,6 +120,10 @@ $(tk)/print.o: src/lib/kernel/print.asm
 $(tk)/prointrhdl.o: src/kernel/prointrhdl.asm
 	$(asm) $(fasm) -o $@ $<
 
+# make switch.o
+$(tk)/switch.o: src/thread/switch.asm
+	$(asm) $(fasm) -o $@ $<
+
 #=========================================================================
 #  gcc compile
 #-------------------------------------------------------------------------
@@ -156,6 +161,10 @@ $(tk)/string.o: src/lib/string.c
 
 # make thread.o
 $(tk)/thread.o: src/thread/thread.c
+	$(cc) $(fcc) -o $@ $<
+
+# make list.o
+$(tk)/list.o: src/lib/kernel/list.c
 	$(cc) $(fcc) -o $@ $<
 #=========================================================================
 #  link all obj
