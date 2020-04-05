@@ -125,6 +125,29 @@ void __schedule(){
     __switchTo(cur, next);
 }
 
+void __thdBlock(enum procStatus stat){                              //运行线程变为阻塞，重新进入调度
+    ASSERT(((stat == BLOCKED) || (stat == WAITING) || (stat == HANGING)));
+    enum _intrStatus oldStatus = __intrDisable();
+    struct pcb* cur = __thdAddr();
+    cur->status = stat;
+    __schedule();
+    __intrSetStatus(oldStatus);
+}
+
+void __thdUnblock(struct pcb* pthread){                             //阻塞线程状态变为就绪态
+    ASSERT(((pthread->status == BLOCKED) || (pthread->status == WAITING) || (pthread->status == HANGING)));
+    enum _intrStatus oldStatus = __intrDisable();
+    if(pthread->status != READY){
+        ASSERT(!__listNodeFind(&thdReadyList, &pthread->genNode));
+        if(__listNodeFind(&thdReadyList, &pthread->genNode)){
+            PANIC("ERROR: __thdUnblock blocked thread in thdReadyList in thread.c\n");
+        }
+        __listPush(&thdReadyList, &pthread->genNode);
+        pthread->status = READY;
+    }
+    __intrSetStatus(oldStatus);
+}
+
 void __initThreadMulti(void){
     __printstr("Multithread Initialization start:\n");
     __listInit(&thdReadyList);
