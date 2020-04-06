@@ -3,6 +3,7 @@
 #include "interrupt.h"
 #include "io.h"
 #include "global.h"
+#include "ioqueue.h"
 
 #define KBD_BUF_PORT 0x60	                    // 键盘buffer寄存器端口号为0x60
 
@@ -33,6 +34,9 @@
 #define ctlRMake  	0xe01d
 #define ctlRBreak 	0xe09d
 #define capsMake 	0x3a
+
+// 定义键盘缓冲区
+struct ioqueue keybBuf;
 
 // 全局变量定义控制键按下状态，其中ext是扩展扫描码0xe0标识
 static int ctlStatus, shiftStatus, altStatus, capsStatus, extScancode;
@@ -165,8 +169,12 @@ static void __intrKeyboard(void){
         uint8 index = (scancode &= 0x00ff);                 //扫描码高字节比如0xe0这些前缀清0
         char cur = keymap[index][shift];
 
-        if(cur){                                            //只要获得的字符非0就打印
-            __printchar(cur);
+        if(cur){                                            //只要获得的字符非0
+            //如果键盘缓冲区没满，就加入键盘缓冲区
+            if(!__ioqFull(&keybBuf)){
+                __printchar(cur);                           //目前没有消费者，先回显
+                __ioqProduce(&keybBuf, cur);
+            }
             return;
         }
 
