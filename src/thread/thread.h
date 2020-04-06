@@ -74,4 +74,6 @@ void __initThread(struct pcb* pthread, char* name, int prio);
 struct pcb* __startThread(char* name, int prio, __threadFunc function, void* funcArg);
 void __initThreadMulti(void);
 void __schedule(void);
+void __thdBlock(enum procStatus stat);
+void __thdUnblock(struct pcb* pthread);
 #endif

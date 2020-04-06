@@ -15,6 +15,8 @@
 #define CONTROL_WORD_RW         3
 #define CONTROL_WORD_MODE       2
 
+static void __intrTimer(void);
+
 uint32 ticks;                           //ticks是内核自终端开启以来的时间片
 
 static void __setFrequency (uint8 portCounter, uint8 ctlWCounter, uint8 ctlWRW, uint8 ctlWMode, uint16 value) {

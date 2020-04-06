@@ -8,7 +8,7 @@
 #define PIC_M_DATA  0X21
 #define PIC_S_CTRL  0Xa0
 #define PIC_S_DATA  0Xa1
-#define IDT_CNT     0x21
+#define IDT_CNT     0x30
 #define EFLAGS_IF   0X00000200
 #define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0": "=g"(EFLAG_VAR))
 
@@ -182,7 +182,7 @@ static void __initPic (void) {
      *       [注] 实际上IRQ15、IRQ7对应的中断没有办法被IMR也即OCW1屏蔽
      */
      /* 相当于只打开IRQ0 */
-    __outB(PIC_M_DATA, 0xfe);
+    __outB(PIC_M_DATA, 0xfd);
     __outB(PIC_S_DATA, 0xff);
 
     __printstr("    pic initialization!\n");

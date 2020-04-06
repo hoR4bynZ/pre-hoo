@@ -2,6 +2,7 @@
 #include "list.h"
 #include "global.h"
 #include "debug.h"
+#include "thread.h"
 #include "interrupt.h"
 
 void __semaInit(struct semaphore* psema, uint8 value){  //填充信号量结构体

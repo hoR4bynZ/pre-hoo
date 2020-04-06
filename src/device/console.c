@@ -5,7 +5,7 @@
 #include "thread.h"
 static struct lock consoleLock;
 
-void __consoleInit(){               //初始化控制台锁
+void __initConsole(){               //初始化控制台锁
     __lockInit(&consoleLock);
 }
 

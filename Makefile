@@ -43,7 +43,7 @@ kernel = $(tk)/kernel.bin
 materials = $(tk)/main.o $(tk)/prointrhdl.o $(tk)/interrupt.o $(tk)/print.o \
 			$(tk)/init.o $(tk)/timer.o $(tk)/debug.o $(tk)/memory.o			\
 			$(tk)/bitmap.o $(tk)/string.o $(tk)/thread.o $(tk)/list.o		\
-			$(tk)/switch.o $(tk)/console.o $(tk)/sync.o
+			$(tk)/switch.o $(tk)/console.o $(tk)/sync.o $(tk)/keyboard.o
 
 
 
@@ -173,6 +173,10 @@ $(tk)/sync.o: src/thread/sync.c
 
 # make console.o
 $(tk)/console.o: src/device/console.c
+	$(cc) $(fcc) -o $@ $<
+
+# make keyboard.o
+$(tk)/keyboard.o: src/device/keyboard.c
 	$(cc) $(fcc) -o $@ $<
 #=========================================================================
 #  link all obj

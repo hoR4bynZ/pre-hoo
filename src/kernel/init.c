@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "thread.h"
 #include "console.h"
+#include "keyboard.h"
 
 void __initAll (void) {
     __printstr("Initializing all module!\n");
@@ -11,5 +12,6 @@ void __initAll (void) {
     __initTimer();
     __initMem();
     __initThreadMulti();
-    __consoleInit();
+    __initConsole();
+    __initKeyboard();
 }

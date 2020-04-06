@@ -12,14 +12,14 @@ int main(void) {
     __printstr("Hello Operating System!\n");
     __initAll();
 
-    __startThread("k_thread", 31, k_thread_a, "argA ");
-    __startThread("k_thread", 8, k_thread_b, "argB ");
+    // __startThread("k_thread", 31, k_thread_a, "argA ");
+    // __startThread("k_thread", 8, k_thread_b, "argB ");
 
     __intrEnable();
-    while(1){
-        __consolePrintStr("Main ");
-    }
-    
+    while(1); //{
+    //     __consolePrintStr("Main ");
+    // }
+
     return 0;
 }
 
