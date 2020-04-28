@@ -24,22 +24,22 @@
 	1. $ make run
 	2. $ <bochs:1> b 0x1000
 	   $ <bochs:2> c
-	![images 1](images/bootloader.png)
+![images 1](images/bootloader.png)
 	3. the page table map:
 	   $ <bochs:3> info tab
-	![images 2](images/initialize-page-map.png)
+![images 2](images/initialize-page-map.png)
 	
 #### 2. interruption:
 	1. need to alter ./src/kernel/main.c
 			call interrupt routine by `int 0x..`
-	![images 3](images/int-call-interruption.png)
+![images 3](images/int-call-interruption.png)
 			other interrupt routine such as *timer*
-	![images 4](images/timer-interruption.png)
+![images 4](images/timer-interruption.png)
 
 #### 3. memory:
 	1. need to alter ./src/kernel/main.c
-	![images 5](images/memory.png)
+![images 5](images/memory.png)
 
 #### 4. thread schedule:
 	1. need to alter ./src/kernel/main.c
-	![images 6](images/multi-thread-schedule.png)
+![images 6](images/multi-thread-schedule.png)
