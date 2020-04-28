@@ -24,22 +24,22 @@
 	1. $ make run
 	2. $ <bochs:1> b 0x1000
 	   $ <bochs:2> c  
-<div align="center"><img  src="images/bootloader.png" style="zoom:50%" /></div>  
+<div align="center"><img  src="images/bootloader.png" width="50%" height="50%" /></div>  
 	3. the page table map:
 	   $ <bochs:3> info tab  
-<div align="center"><img  src="images/bootloader.png" style="zoom:50%" /></div>  
+<div align="center"><img  src="images/initialize-page-map.png" width="50%" height="50%" /></div>  
 	
 #### 2. interruption:
 	1. need to alter ./src/kernel/main.c
 			call interrupt routine by `int 0x..`  
-<div align="center"><img  src="images/bootloader.png" style="zoom:50%" /></div>  
+<div align="center"><img  src="images/int-call-interruption.png" width="50%" height="50%" /></div>  
 			other interrupt routine such as *timer*  
-<div align="center"><img  src="images/bootloader.png" style="zoom:50%" /></div>  
+<div align="center"><img  src="images/timer-interruption.png" width="50%" height="50%" /></div>  
 
 #### 3. memory:
 	1. need to alter ./src/kernel/main.c  
-<div align="center"><img  src="images/bootloader.png" style="zoom:50%" /></div>  
+<div align="center"><img  src="images/memory.png" width="50%" height="50%" /></div>  
 
 #### 4. thread schedule:
 	1. need to alter ./src/kernel/main.c  
-<div align="center"><img  src="images/bootloader.png" style="zoom:50%" /></div>  
+<div align="center"><img  src="images/multi-thread-schedule.png" width="50%" height="50%" /></div>  
