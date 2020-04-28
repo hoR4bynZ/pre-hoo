@@ -24,22 +24,22 @@
 	1. $ make run
 	2. $ <bochs:1> b 0x1000
 	   $ <bochs:2> c
-	![](https://raw.githubusercontent.com/hoR4bynZ/hoo/master/images/bootloader.png)
+	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/bootloader.png)
 	3. the page table map:
 	   $ <bochs:3> info tab
-	![](https://raw.githubusercontent.com/hoR4bynZ/hoo/master/images/initialize-page-map.png)
+	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/initialize-page-map.png)
 	
 #### 2. interruption:
 	1. need to alter ./src/kernel/main.c
 			call interrupt routine by `int 0x..`
-	![](https://raw.githubusercontent.com/hoR4bynZ/hoo/master/images/int-call-interruption.png)
+	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/int-call-interruption.png)
 			other interrupt routine such as *timer*
-	![](https://raw.githubusercontent.com/hoR4bynZ/hoo/master/images/timer-interruption.png)
+	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/timer-interruption.png)
 
 #### 3. memory:
 	1. need to alter ./src/kernel/main.c
-	![](https://raw.githubusercontent.com/hoR4bynZ/hoo/master/images/memory.png)
+	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/memory.png)
 
 #### 4. thread schedule:
 	1. need to alter ./src/kernel/main.c
-	![](https://raw.githubusercontent.com/hoR4bynZ/hoo/master/images/multi-thread-schedule.png)
+	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/multi-thread-schedule.png)
