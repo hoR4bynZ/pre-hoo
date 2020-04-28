@@ -24,22 +24,22 @@
 	1. $ make run
 	2. $ <bochs:1> b 0x1000
 	   $ <bochs:2> c
-	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/bootloader.png)
+	![](images/bootloader.png)
 	3. the page table map:
 	   $ <bochs:3> info tab
-	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/initialize-page-map.png)
+	![](images/initialize-page-map.png)
 	
 #### 2. interruption:
 	1. need to alter ./src/kernel/main.c
 			call interrupt routine by `int 0x..`
-	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/int-call-interruption.png)
+	![](images/int-call-interruption.png)
 			other interrupt routine such as *timer*
-	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/timer-interruption.png)
+	![](images/timer-interruption.png)
 
 #### 3. memory:
 	1. need to alter ./src/kernel/main.c
-	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/memory.png)
+	![](images/memory.png)
 
 #### 4. thread schedule:
 	1. need to alter ./src/kernel/main.c
-	![](raw.githubusercontent.com/hoR4bynZ/hoo/master/images/multi-thread-schedule.png)
+	![](images/multi-thread-schedule.png)
